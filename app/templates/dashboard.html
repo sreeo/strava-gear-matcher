@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strava Gear Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <style>
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <h1>Strava Gear Dashboard</h1>
+        <button class="option-button" onclick="showAddGearForm()">Add Detail About Gear</button>
+        <button class="option-button" onclick="openCamera()">Update Gear for Activity</button>
+    </div>
+
+    <!-- Gear Description Modal -->
+    <div id="gearModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeGearModal()">&times;</span>
+            <h2>Update Gear Description</h2>
+            <form id="gearForm">
+                <select id="gearSelect" onchange="loadGearDescription()">
+                    <option value="">Select a gear</option>
+                </select>
+                <textarea id="gearDescription" placeholder="Enter gear description, describe color and make of the shoe/cycle."></textarea>
+                <button type="button" onclick="updateGearDescription()">Update Description</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Camera Modal -->
+    <div id="cameraModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeCameraModal()">&times;</span>
+            <video id="cameraFeed" autoplay></video>
+            <button id="captureButton" onclick="captureImage()">Capture Image</button>
+        </div>
+    </div>
+
+    <script>
+        let gearList = [];
+
+        function showAddGearForm() {
+            document.getElementById('gearModal').style.display = 'block';
+            fetchGearList();
+        }
+
+        function closeGearModal() {
+            document.getElementById('gearModal').style.display = 'none';
+        }
+
+        function fetchGearList() {
+            fetch('/api/gear')
+                .then(response => response.json())
+                .then(data => {
+                    gearList = data;
+                    const gearSelect = document.getElementById('gearSelect');
+                    gearSelect.innerHTML = '<option value="">Select a gear</option>';
+                    gearList.forEach(gear => {
+                        const option = document.createElement('option');
+                        option.value = gear.id;
+                        option.textContent = `${gear.name} (${gear.type})`;
+                        gearSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching gear:', error));
+        }
+
+        function loadGearDescription() {
+            const gearId = document.getElementById('gearSelect').value;
+            const gear = gearList.find(g => g.id == gearId);
+            if (gear) {
+                console.log(gear);
+                document.getElementById('gearDescription').value = gear.description || '';
+            } else {
+                document.getElementById('gearDescription').value = '';
+            }
+        }
+
+    function fetchGearList() {
+        fetch('/api/gear')
+            .then(response => response.json())
+            .then(data => {
+                gearList = data;
+                const gearSelect = document.getElementById('gearSelect');
+                gearSelect.innerHTML = '<option value="">Select a gear</option>';
+                gearList.forEach(gear => {
+                    const option = document.createElement('option');
+                    option.value = gear.id;
+                    option.textContent = `${gear.name} (${gear.type})`;
+                    gearSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error fetching gear:', error));
+    }
+
+    function updateGearDescription() {
+        const gearId = document.getElementById('gearSelect').value;
+        const description = document.getElementById('gearDescription').value;
+
+        if (!gearId) {
+            alert("Please select a gear.");
+            return;
+        }
+
+        fetch(`/api/gear/${gearId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ description: description })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+            } else {
+                alert(data.message);
+                // Update the local gearList with the new description
+                const updatedGear = gearList.find(g => g.id === parseInt(gearId));
+                if (updatedGear) {
+                    updatedGear.description = description;
+                }
+                closeGearModal();
+            }
+        })
+        .catch(error => console.error('Error updating gear description:', error));
+    }
+
+        function openCamera() {
+            document.getElementById('cameraModal').style.display = 'block';
+            navigator.mediaDevices.getUserMedia({ video: true })
+                .then(stream => {
+                    document.getElementById('cameraFeed').srcObject = stream;
+                })
+                .catch(error => {
+                    console.error("Error accessing the camera:", error);
+                    alert("Unable to access the camera. Please check your permissions.");
+                });
+        }
+
+        function closeCameraModal() {
+            document.getElementById('cameraModal').style.display = 'none';
+            const video = document.getElementById('cameraFeed');
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        function captureImage() {
+            const canvas = document.createElement('canvas');
+            const video = document.getElementById('cameraFeed');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+            canvas.toBlob(function(blob) {
+                    uploadImage(blob);
+                }, 'image/jpeg');       
+                    
+             closeCameraModal();
+        }
+
+        function uploadImage(blob) {
+            const formData = new FormData();
+            formData.append('image', blob, 'captured_image.jpg');
+
+            fetch('/api/upload_image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert('Error uploading image: ' + data.error);
+                } else {
+                    alert('Image uploaded successfully!');
+                    console.log('Uploaded filename:', data.filename);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while uploading the image.');
+            });
+        }
+
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('gearModal')) {
+                closeGearModal();
+            }
+            if (event.target == document.getElementById('cameraModal')) {
+                closeCameraModal();
+            }
+        }
+    </script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="829ee040-164f-4884-90e3-a87964670cb2"></script>
+</body>
+</html>

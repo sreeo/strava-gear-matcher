@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect with Strava</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Connect Your Fitness Journey</h1>
+                <p>Link your Strava account to unlock powerful insights and track your progress like never before.</p>
+                <a href="{{ url_for('auth.strava_auth') }}" class="btn">Connect with Strava</a>
+            </div>
+        </div>
+    </div>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id="829ee040-164f-4884-90e3-a87964670cb2"></script>
+</body>
+</html>

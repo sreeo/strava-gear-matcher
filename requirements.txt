@@ -1,0 +1,10 @@
+torch
+transformers
+Pillow
+flask==3.0.3
+requests==2.26.0
+psycopg2==2.9.9
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.7
+alembic==1.13.2
+gunicorn
