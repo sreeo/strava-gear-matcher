@@ -48,6 +48,8 @@ def callback():
             user = User(strava_id=athlete_detail['id'],
                         name=f"{athlete_detail['firstname']} {athlete_detail['lastname']}")
             db.session.add(user)
+            db.session.commit()
+            db.session.flush()
         return user.id
 
     def set_session_data(user_id, tokens):
