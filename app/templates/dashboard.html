@@ -131,15 +131,31 @@
     }
 
         function openCamera() {
-            document.getElementById('cameraModal').style.display = 'block';
-            navigator.mediaDevices.getUserMedia({ video: true })
-                .then(stream => {
-                    document.getElementById('cameraFeed').srcObject = stream;
-                })
-                .catch(error => {
-                    console.error("Error accessing the camera:", error);
-                    alert("Unable to access the camera. Please check your permissions.");
-                });
+             const constraints = {
+                 video: {
+                    facingMode: { exact: "environment" }
+                 }
+            };
+            navigator.mediaDevices.getUserMedia(constraints)
+            .then(stream => {
+                const videoElement = document.getElementById('cameraFeed');
+                videoElement.srcObject = stream;
+                document.getElementById('cameraModal').style.display = 'block';
+            })
+            .catch(error => {
+                console.error("Error accessing the camera:", error);
+                // Fallback to any available camera if the rear camera is not available
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        const videoElement = document.getElementById('cameraFeed');
+                        videoElement.srcObject = stream;
+                        document.getElementById('cameraModal').style.display = 'block';
+                    })
+                    .catch(fallbackError => {
+                        console.error("Error accessing any camera:", fallbackError);
+                        alert("Unable to access the camera. Please check your permissions or try a different device.");
+                    });
+            });
         }
 
         function closeCameraModal() {
