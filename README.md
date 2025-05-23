@@ -1,6 +1,9 @@
 ### Short description
 I have a bunch of shoes I cycle through different days of the week.
 
+https://github.com/user-attachments/assets/66e817d9-b93d-4bb2-95e2-339128166212
+
+
 This is how it works:
 1. Add your gear on your strava profile (shoe or cycle).
 2. Do your workout (run/cycle).
